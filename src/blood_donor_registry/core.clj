@@ -18,6 +18,14 @@
 (defn parse [text]
   (map #(str/split % #",") (str/split-lines text)))
 
+(defn row->donor [row]
+  (reduce (fn [donor [k v]] (assoc donor k (convert k v)))
+          {}
+          (map vector donor-keys row)))
+
+(defn load-donors [file]
+  (map row->donor (parse (slurp file))))
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
