@@ -39,7 +39,7 @@
           validations))
 
 (defn load-donors
-  "Reads donors from the CSV `file`, skipping rows that are not valid donors."
+  "Skips invalid rows."
   [file]
   (->> (slurp file)
        parse
@@ -47,8 +47,7 @@
        (filter #(valid-donor? donor-validations %))))
 
 (defn append
-  "Adds `donor` to the end of `donors` if it is valid.
-  An invalid `donor` is ignored and `donors` is returned unchanged."
+  "Ignores an invalid donor."
   [donors donor]
   (if (valid-donor? donor-validations donor)
     (conj (vec donors) donor)
@@ -59,6 +58,9 @@
 
 (defn donors->csv [donors]
   (str/join "\n" (map donor->csv-row donors)))
+
+(defn save-donors [file donors]
+  (spit file (donors->csv donors)))
 
 (defn find-donor [donors id]
   (some #(when (= id (:id %)) %) donors))
@@ -81,19 +83,14 @@
               {:donations 75 :reward "Plaketa"}
               {:donations 100 :reward "Povelja"}])
 
-(defn earned-rewards
-  "Returns all rewards reached by `donations`, lowest first.
-  Relies on `rewards` being sorted by `:donations` in ascending order."
-  [donations]
+(defn earned-rewards [donations]
   (take-while #(>= donations (:donations %)) rewards))
 
-(defn reward-for
-  "Returns the highest reward earned with `donations`, or nil if none."
-  [donations]
+(defn reward-for [donations]
   (last (earned-rewards donations)))
 
 (defn donors-with-reward
-  "Returns the `donors` whose highest earned reward is `reward-name`."
+  "Matches only the highest earned reward."
   [reward-name donors]
   (filter #(= reward-name (-> % :donations reward-for :reward)) donors))
 

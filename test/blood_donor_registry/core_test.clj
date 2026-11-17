@@ -102,7 +102,17 @@
     (->> donors
          core/donors->csv
          core/parse
-         (map core/row->donor)) => donors))
+         (map core/row->donor)) => donors)
+
+  (fact "save-donors writes donors as CSV to the file"
+    (core/save-donors "out.csv" [marko jelena]) => nil
+    (provided
+      (spit "out.csv" "1,Marko,Petrovic,A+,12\n2,Jelena,Nikolic,0-,3") => nil))
+
+  (fact "saved donors load back unchanged"
+    (let [file (doto (java.io.File/createTempFile "donors" ".csv") .deleteOnExit)]
+      (core/save-donors file donors)
+      (core/load-donors file) => donors)))
 
 (facts "about querying donors"
   (fact "find-donor returns the donor with the given id"
