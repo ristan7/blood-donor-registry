@@ -48,6 +48,16 @@
     (provided
       (slurp "donors.csv") => "1,Marko,Petrovic,A+,12\n2,Jelena,Nikolic,0-,3"))
 
+  (fact "load-donors skips rows that are not valid donors"
+    (core/load-donors "donors.csv") => [marko jelena]
+    (provided
+      (slurp "donors.csv") => (str "1,Marko,Petrovic,A+,12\n"
+                                   "5,Mila,Savic,X+,4\n"
+                                   "\n"
+                                   "6,Ivan,Ivic,B-,abc\n"
+                                   "7,Nina\n"
+                                   "2,Jelena,Nikolic,0-,3")))
+
   (fact "the sample file contains the four sample donors"
     (core/load-donors core/donors-file) => donors))
 

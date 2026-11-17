@@ -23,9 +23,6 @@
           {}
           (map vector donor-keys row)))
 
-(defn load-donors [file]
-  (map row->donor (parse (slurp file))))
-
 (def blood-types #{"0+" "0-" "A+" "A-" "B+" "B-" "AB+" "AB-"})
 
 (defn non-blank-string? [s]
@@ -40,6 +37,14 @@
 (defn valid-donor? [validations donor]
   (every? (fn [[k valid?]] (valid? (get donor k)))
           validations))
+
+(defn load-donors
+  "Reads donors from the CSV `file`, skipping rows that are not valid donors."
+  [file]
+  (->> (slurp file)
+       parse
+       (map row->donor)
+       (filter #(valid-donor? donor-validations %))))
 
 (defn append
   "Adds `donor` to the end of `donors` if it is valid.
