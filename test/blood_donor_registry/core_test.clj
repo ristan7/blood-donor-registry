@@ -162,6 +162,9 @@
     (core/record-donation donors 2)
     => [marko (assoc jelena :donations 4) stefan ana])
 
+  (fact "donors stay a vector"
+    (core/record-donation donors 2) => vector?)
+
   (fact "unknown id gives nil"
     (core/record-donation donors 99) => nil)
 

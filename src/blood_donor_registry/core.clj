@@ -79,15 +79,15 @@
   (reduce + (map :donations donors)))
 
 (defn add-donation [donor]
-  (assoc donor :donations (inc (:donations donor))))
+  (update-in donor [:donations] inc))
 
 (defn record-donation [donors id]
   (when (find-donor donors id)
-    (map (fn [donor]
-           (if (= (:id donor) id)
-             (add-donation donor)
-             donor))
-         donors)))
+    (mapv (fn [donor]
+            (if (= (:id donor) id)
+              (add-donation donor)
+              donor))
+          donors)))
 
 (defn record-donation! [file id]
   (when-let [donors (record-donation (load-donors file) id)]
