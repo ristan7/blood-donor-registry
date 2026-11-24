@@ -44,7 +44,7 @@
 (defn donors->csv [donors]
   (str/join "\n" (map donor->csv-row donors)))
 
-(defn save-donors [file donors]
+(defn save-donors! [file donors]
   (spit file (donors->csv donors)))
 
 (defn find-donor [donors id]
@@ -77,6 +77,22 @@
 
 (defn total-donations [donors]
   (reduce + (map :donations donors)))
+
+(defn add-donation [donor]
+  (update-in donor [:donations] inc))
+
+(defn record-donation [donors id]
+  (when (find-donor donors id)
+    (mapv (fn [donor]
+            (if (= (:id donor) id)
+              (add-donation donor)
+              donor))
+          donors)))
+
+(defn record-donation! [file id]
+  (when-let [donors (record-donation (load-donors file) id)]
+    (save-donors! file donors)
+    donors))
 
 (def rewards [{:donations 10 :reward "Zahvalnica"}
               {:donations 25 :reward "Srebrna značka"}
