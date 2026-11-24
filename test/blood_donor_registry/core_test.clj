@@ -31,6 +31,11 @@
 (defn valid? [donor]
   (core/valid-donor? core/donor-validations donor))
 
+(defn temp-file []
+  (let [file (java.io.File/createTempFile "donors" ".csv")]
+    (.deleteOnExit file)
+    file))
+
 (facts "about loading donors from CSV"
   (fact "convert parses numeric fields and keeps text fields"
     (core/convert :id "7") => 7
@@ -120,8 +125,7 @@
       (spit "out.csv" "1,Marko,Petrovic,A+,12\n2,Jelena,Nikolic,0-,3") => nil))
 
   (fact "saved donors load back unchanged"
-    (let [file (java.io.File/createTempFile "donors" ".csv")]
-      (.deleteOnExit file)
+    (let [file (temp-file)]
       (core/save-donors! file donors)
       (core/load-donors file) => donors)))
 
@@ -159,7 +163,20 @@
     => [marko (assoc jelena :donations 4) stefan ana])
 
   (fact "unknown id gives nil"
-    (core/record-donation donors 99) => nil))
+    (core/record-donation donors 99) => nil)
+
+  (fact "recorded donation is saved to the file"
+    (let [file (temp-file)]
+      (core/save-donors! file donors)
+      (core/record-donation! file 2)
+      (core/find-donor (core/load-donors file) 2)
+      => (assoc jelena :donations 4)))
+
+  (fact "unknown id leaves the file as it was"
+    (let [file (temp-file)]
+      (core/save-donors! file donors)
+      (core/record-donation! file 99)
+      (core/load-donors file) => donors)))
 
 (facts "about rewards"
   (fact "no reward below the first threshold"

@@ -89,6 +89,10 @@
              donor))
          donors)))
 
+(defn record-donation! [file id]
+  (when-let [donors (record-donation (load-donors file) id)]
+    (save-donors! file donors)))
+
 (def rewards [{:donations 10 :reward "Zahvalnica"}
               {:donations 25 :reward "Srebrna značka"}
               {:donations 50 :reward "Zlatna značka"}
