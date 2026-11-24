@@ -1,5 +1,6 @@
 (ns blood-donor-registry.core-test
   (:require [blood-donor-registry.core :as core]
+            [clojure.string :as str]
             [midje.sweet :refer [=> contains fact facts just provided]]))
 
 (def marko {:id         1
@@ -206,3 +207,10 @@
   (fact "donors-with-reward finds donors by their highest reward"
     (core/donors-with-reward "Zahvalnica" donors) => [marko]
     (core/donors-with-reward "Povelja" donors) => empty?))
+
+(fact "main prints all donors"
+  (str/split-lines (with-out-str (core/-main)))
+  => ["1 Marko Petrovic A+ 12"
+      "2 Jelena Nikolic 0- 3"
+      "3 Stefan Jovanovic B+ 27"
+      "4 Ana Ilic AB+ 51"])

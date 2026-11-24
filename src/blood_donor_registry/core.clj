@@ -112,4 +112,9 @@
   (filter #(= reward-name (-> % :donations reward-for :reward)) donors))
 
 (defn -main [& _args]
-  (println "Hello, World!"))
+  (doseq [donor (load-donors donors-file)]
+    (println (:id donor)
+             (:first-name donor)
+             (:last-name donor)
+             (:blood-type donor)
+             (:donations donor))))
