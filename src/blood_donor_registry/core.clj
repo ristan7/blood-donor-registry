@@ -129,7 +129,13 @@
                (:donations donor)))
     (println "Ne postoji donor sa ID" id)))
 
+(defn parse-id [s]
+  (when s
+    (parse-long s)))
+
 (defn -main [& args]
   (if (= "donate" (first args))
-    (donate! donors-file (parse-long (second args)))
+    (if-let [id (parse-id (second args))]
+      (donate! donors-file id)
+      (println "Upotreba: lein run donate <id>"))
     (print-donors (load-donors donors-file))))

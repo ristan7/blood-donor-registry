@@ -220,6 +220,17 @@
   (provided
     (core/donate! core/donors-file 2) => nil))
 
+(fact "parse-id turns text into a number"
+  (core/parse-id "2") => 2
+  (core/parse-id "abc") => nil
+  (core/parse-id nil) => nil)
+
+(fact "donate without a good id prints how to use it"
+  (str/split-lines (with-out-str (core/-main "donate")))
+  => ["Upotreba: lein run donate <id>"]
+  (str/split-lines (with-out-str (core/-main "donate" "abc")))
+  => ["Upotreba: lein run donate <id>"])
+
 (fact "donate! says who got the donation"
   (let [file (temp-file)]
     (core/save-donors! file donors)
