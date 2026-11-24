@@ -176,7 +176,14 @@
     (let [file (temp-file)]
       (core/save-donors! file donors)
       (core/record-donation! file 99)
-      (core/load-donors file) => donors)))
+      (core/load-donors file) => donors))
+
+  (fact "record-donation! returns the donors it saved"
+    (let [file (temp-file)]
+      (core/save-donors! file donors)
+      (core/record-donation! file 2)
+      => [marko (assoc jelena :donations 4) stefan ana]
+      (core/record-donation! file 99) => nil)))
 
 (facts "about rewards"
   (fact "no reward below the first threshold"
