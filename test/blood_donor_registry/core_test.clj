@@ -149,6 +149,11 @@
   (fact "total-donations sums every donation"
     (core/total-donations donors) => 93))
 
+(facts "about recording donations"
+  (fact "donor gets one more donation"
+    (core/record-donation donors 2)
+    => [marko (assoc jelena :donations 4) stefan ana]))
+
 (facts "about rewards"
   (fact "no reward below the first threshold"
     (core/reward-for 9) => nil

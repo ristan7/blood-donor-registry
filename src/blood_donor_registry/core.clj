@@ -78,6 +78,13 @@
 (defn total-donations [donors]
   (reduce + (map :donations donors)))
 
+(defn record-donation [donors id]
+  (map (fn [donor]
+         (if (= (:id donor) id)
+           (assoc donor :donations (inc (:donations donor)))
+           donor))
+       donors))
+
 (def rewards [{:donations 10 :reward "Zahvalnica"}
               {:donations 25 :reward "Srebrna značka"}
               {:donations 50 :reward "Zlatna značka"}
