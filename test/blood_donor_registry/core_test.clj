@@ -114,14 +114,15 @@
          core/parse
          (map core/row->donor)) => donors)
 
-  (fact "save-donors writes donors as CSV to the file"
-    (core/save-donors "out.csv" [marko jelena]) => nil
+  (fact "save-donors! writes donors as CSV to the file"
+    (core/save-donors! "out.csv" [marko jelena]) => nil
     (provided
       (spit "out.csv" "1,Marko,Petrovic,A+,12\n2,Jelena,Nikolic,0-,3") => nil))
 
   (fact "saved donors load back unchanged"
-    (let [file (doto (java.io.File/createTempFile "donors" ".csv") .deleteOnExit)]
-      (core/save-donors file donors)
+    (let [file (java.io.File/createTempFile "donors" ".csv")]
+      (.deleteOnExit file)
+      (core/save-donors! file donors)
       (core/load-donors file) => donors)))
 
 (facts "about querying donors"
@@ -150,9 +151,15 @@
     (core/total-donations donors) => 93))
 
 (facts "about recording donations"
+  (fact "add-donation adds one donation"
+    (core/add-donation jelena) => (assoc jelena :donations 4))
+
   (fact "donor gets one more donation"
     (core/record-donation donors 2)
-    => [marko (assoc jelena :donations 4) stefan ana]))
+    => [marko (assoc jelena :donations 4) stefan ana])
+
+  (fact "unknown id gives nil"
+    (core/record-donation donors 99) => nil))
 
 (facts "about rewards"
   (fact "no reward below the first threshold"
