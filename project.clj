@@ -6,5 +6,7 @@
   :dependencies [[org.clojure/clojure "1.12.2"]]
   :main ^:skip-aot blood-donor-registry.core
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all
+  :profiles {:dev {:dependencies [[midje "1.10.10"]]
+                   :plugins [[lein-midje "3.2.2"]]}
+             :uberjar {:aot :all
                        :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})
