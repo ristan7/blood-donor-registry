@@ -214,3 +214,8 @@
       "2 Jelena Nikolic 0- 3"
       "3 Stefan Jovanovic B+ 27"
       "4 Ana Ilic AB+ 51"])
+
+(fact "donate records a donation for the id"
+  (core/-main "donate" "2") => nil
+  (provided
+    (core/record-donation! core/donors-file 2) => nil))

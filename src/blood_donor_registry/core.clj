@@ -111,10 +111,15 @@
   [reward-name donors]
   (filter #(= reward-name (-> % :donations reward-for :reward)) donors))
 
-(defn -main [& _args]
-  (doseq [donor (load-donors donors-file)]
+(defn print-donors [donors]
+  (doseq [donor donors]
     (println (:id donor)
              (:first-name donor)
              (:last-name donor)
              (:blood-type donor)
              (:donations donor))))
+
+(defn -main [& args]
+  (if (= "donate" (first args))
+    (record-donation! donors-file (parse-long (second args)))
+    (print-donors (load-donors donors-file))))
