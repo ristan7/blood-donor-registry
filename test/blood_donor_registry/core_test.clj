@@ -58,6 +58,13 @@
                                    "7,Nina\n"
                                    "2,Jelena,Nikolic,0-,3")))
 
+  (fact "load-donors keeps only the first row for a repeated id"
+    (core/load-donors "donors.csv") => [marko jelena]
+    (provided
+      (slurp "donors.csv") => (str "1,Marko,Petrovic,A+,12\n"
+                                   "2,Jelena,Nikolic,0-,3\n"
+                                   "1,Mila,Savic,0+,4")))
+
   (fact "the sample file contains the four sample donors"
     (core/load-donors core/donors-file) => donors))
 
@@ -92,7 +99,10 @@
       (core/append donors mila) => (just [marko jelena stefan ana mila]))
 
     (fact "an invalid donor is not appended"
-      (core/append donors (assoc mila :blood-type "X")) => donors)))
+      (core/append donors (assoc mila :blood-type "X")) => donors)
+
+    (fact "a donor with an existing id is not appended"
+      (core/append donors (assoc mila :id 1)) => donors)))
 
 (facts "about writing donors back to CSV"
   (fact "one donor becomes one CSV line"

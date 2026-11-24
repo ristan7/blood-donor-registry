@@ -38,21 +38,6 @@
   (every? (fn [[k valid?]] (valid? (get donor k)))
           validations))
 
-(defn load-donors
-  "Skips invalid rows."
-  [file]
-  (->> (slurp file)
-       parse
-       (map row->donor)
-       (filter #(valid-donor? donor-validations %))))
-
-(defn append
-  "Ignores an invalid donor."
-  [donors donor]
-  (if (valid-donor? donor-validations donor)
-    (conj (vec donors) donor)
-    donors))
-
 (defn donor->csv-row [donor]
   (str/join "," (map donor donor-keys)))
 
@@ -64,6 +49,22 @@
 
 (defn find-donor [donors id]
   (some #(when (= id (:id %)) %) donors))
+
+(defn append
+  "Ignores an invalid donor or a taken id."
+  [donors donor]
+  (if (and (valid-donor? donor-validations donor)
+           (nil? (find-donor donors (:id donor))))
+    (conj (vec donors) donor)
+    donors))
+
+(defn load-donors
+  "Skips invalid rows and repeated ids."
+  [file]
+  (->> (slurp file)
+       parse
+       (map row->donor)
+       (reduce append [])))
 
 (defn donors-by-blood-type [blood-type donors]
   (filter #(= blood-type (:blood-type %)) donors))
