@@ -119,7 +119,17 @@
              (:blood-type donor)
              (:donations donor))))
 
+(defn donate! [file id]
+  (if-let [donors (record-donation! file id)]
+    (let [donor (find-donor donors id)]
+      (println "Upisana donacija za"
+               (:first-name donor)
+               (:last-name donor)
+               "- ukupno"
+               (:donations donor)))
+    (println "Ne postoji donor sa ID" id)))
+
 (defn -main [& args]
   (if (= "donate" (first args))
-    (record-donation! donors-file (parse-long (second args)))
+    (donate! donors-file (parse-long (second args)))
     (print-donors (load-donors donors-file))))

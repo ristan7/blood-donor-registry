@@ -218,4 +218,16 @@
 (fact "donate records a donation for the id"
   (core/-main "donate" "2") => nil
   (provided
-    (core/record-donation! core/donors-file 2) => nil))
+    (core/donate! core/donors-file 2) => nil))
+
+(fact "donate! says who got the donation"
+  (let [file (temp-file)]
+    (core/save-donors! file donors)
+    (str/split-lines (with-out-str (core/donate! file 2)))
+    => ["Upisana donacija za Jelena Nikolic - ukupno 4"]))
+
+(fact "donate! says when there is no donor"
+  (let [file (temp-file)]
+    (core/save-donors! file donors)
+    (str/split-lines (with-out-str (core/donate! file 99)))
+    => ["Ne postoji donor sa ID 99"]))
