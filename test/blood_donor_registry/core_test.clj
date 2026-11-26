@@ -187,7 +187,20 @@
       (core/save-donors! file donors)
       (core/record-donation! file 2)
       => [marko (assoc jelena :donations 4) stefan ana]
-      (core/record-donation! file 99) => nil)))
+      (core/record-donation! file 99) => nil))
+
+  (fact "valid-file? is false when a row is bad"
+    (let [file (temp-file)]
+      (core/save-donors! file donors)
+      (core/valid-file? file) => true
+      (spit file "1,Marko,Petrovic,A+,12\n5,Mila,Savic,a+,7")
+      (core/valid-file? file) => false))
+
+  (fact "bad row is not deleted when recording a donation"
+    (let [file (temp-file)]
+      (spit file "1,Marko,Petrovic,A+,12\n5,Mila,Savic,a+,7")
+      (core/record-donation! file 1) => nil
+      (slurp file) => "1,Marko,Petrovic,A+,12\n5,Mila,Savic,a+,7")))
 
 (facts "about rewards"
   (fact "no reward below the first threshold"
@@ -242,3 +255,9 @@
     (core/save-donors! file donors)
     (str/split-lines (with-out-str (core/donate! file 99)))
     => ["Ne postoji donor sa ID 99"]))
+
+(fact "donate! warns when the file has bad rows"
+  (let [file (temp-file)]
+    (spit file "1,Marko,Petrovic,A+,12\n5,Mila,Savic,a+,7")
+    (str/split-lines (with-out-str (core/donate! file 1)))
+    => ["Fajl ima neispravne redove, donacija nije upisana"]))
