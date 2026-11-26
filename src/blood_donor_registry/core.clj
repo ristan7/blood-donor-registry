@@ -89,10 +89,15 @@
               donor))
           donors)))
 
+(defn valid-file? [file]
+  (= (count (parse (slurp file)))
+     (count (load-donors file))))
+
 (defn record-donation! [file id]
-  (when-let [donors (record-donation (load-donors file) id)]
-    (save-donors! file donors)
-    donors))
+  (when (valid-file? file)
+    (when-let [donors (record-donation (load-donors file) id)]
+      (save-donors! file donors)
+      donors)))
 
 (def rewards [{:donations 10 :reward "Zahvalnica"}
               {:donations 25 :reward "Srebrna značka"}
@@ -111,5 +116,45 @@
   [reward-name donors]
   (filter #(= reward-name (-> % :donations reward-for :reward)) donors))
 
-(defn -main [& _args]
-  (println "Hello, World!"))
+(defn donor->line [donor]
+  (let [line (str/join " " [(:id donor)
+                            (:first-name donor)
+                            (:last-name donor)
+                            (:blood-type donor)
+                            (:donations donor)])
+        reward (reward-for (:donations donor))]
+    (if reward
+      (str line " " (:reward reward))
+      line)))
+
+(defn print-donors [donors]
+  (doseq [donor donors]
+    (println (donor->line donor))))
+
+(defn print-donation [donor]
+  (println "Upisana donacija za"
+           (:first-name donor)
+           (:last-name donor)
+           "- ukupno"
+           (:donations donor)))
+
+(defn donate! [file id]
+  (if-not (valid-file? file)
+    (println "Fajl ima neispravne redove, donacija nije upisana")
+    (if-let [donors (record-donation! file id)]
+      (print-donation (find-donor donors id))
+      (println "Ne postoji donor sa ID" id))))
+
+(defn parse-id [s]
+  (when s
+    (parse-long s)))
+
+(defn run [file args]
+  (if (= "donate" (first args))
+    (if-let [id (parse-id (second args))]
+      (donate! file id)
+      (println "Upotreba: lein run donate <id>"))
+    (print-donors (load-donors file))))
+
+(defn -main [& args]
+  (run donors-file args))

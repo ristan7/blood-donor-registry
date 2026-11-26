@@ -1,5 +1,6 @@
 (ns blood-donor-registry.core-test
   (:require [blood-donor-registry.core :as core]
+            [clojure.string :as str]
             [midje.sweet :refer [=> contains fact facts just provided]]))
 
 (def marko {:id         1
@@ -68,10 +69,7 @@
     (provided
       (slurp "donors.csv") => (str "1,Marko,Petrovic,A+,12\n"
                                    "2,Jelena,Nikolic,0-,3\n"
-                                   "1,Mila,Savic,0+,4")))
-
-  (fact "the sample file contains the four sample donors"
-    (core/load-donors core/donors-file) => donors))
+                                   "1,Mila,Savic,0+,4"))))
 
 (facts "about donor validation"
   (fact "a complete donor is valid"
@@ -186,7 +184,20 @@
       (core/save-donors! file donors)
       (core/record-donation! file 2)
       => [marko (assoc jelena :donations 4) stefan ana]
-      (core/record-donation! file 99) => nil)))
+      (core/record-donation! file 99) => nil))
+
+  (fact "valid-file? is false when a row is bad"
+    (let [file (temp-file)]
+      (core/save-donors! file donors)
+      (core/valid-file? file) => true
+      (spit file "1,Marko,Petrovic,A+,12\n5,Mila,Savic,a+,7")
+      (core/valid-file? file) => false))
+
+  (fact "bad row is not deleted when recording a donation"
+    (let [file (temp-file)]
+      (spit file "1,Marko,Petrovic,A+,12\n5,Mila,Savic,a+,7")
+      (core/record-donation! file 1) => nil
+      (slurp file) => "1,Marko,Petrovic,A+,12\n5,Mila,Savic,a+,7")))
 
 (facts "about rewards"
   (fact "no reward below the first threshold"
@@ -206,3 +217,55 @@
   (fact "donors-with-reward finds donors by their highest reward"
     (core/donors-with-reward "Zahvalnica" donors) => [marko]
     (core/donors-with-reward "Povelja" donors) => empty?))
+
+(fact "main runs with the donors file"
+  (core/-main "donate" "2") => nil
+  (provided
+    (core/run core/donors-file ["donate" "2"]) => nil))
+
+(fact "donor->line shows the donor and the reward"
+  (core/donor->line marko) => "1 Marko Petrovic A+ 12 Zahvalnica"
+  (core/donor->line jelena) => "2 Jelena Nikolic 0- 3")
+
+(fact "run prints all donors"
+  (let [file (temp-file)]
+    (core/save-donors! file donors)
+    (str/split-lines (with-out-str (core/run file [])))
+    => ["1 Marko Petrovic A+ 12 Zahvalnica"
+        "2 Jelena Nikolic 0- 3"
+        "3 Stefan Jovanovic B+ 27 Srebrna značka"
+        "4 Ana Ilic AB+ 51 Zlatna značka"]))
+
+(fact "donate records a donation for the id"
+  (core/run "donors.csv" ["donate" "2"]) => nil
+  (provided
+    (core/donate! "donors.csv" 2) => nil))
+
+(fact "parse-id turns text into a number"
+  (core/parse-id "2") => 2
+  (core/parse-id "abc") => nil
+  (core/parse-id nil) => nil)
+
+(fact "donate without a good id prints how to use it"
+  (str/split-lines (with-out-str (core/run "donors.csv" ["donate"])))
+  => ["Upotreba: lein run donate <id>"]
+  (str/split-lines (with-out-str (core/run "donors.csv" ["donate" "abc"])))
+  => ["Upotreba: lein run donate <id>"])
+
+(fact "donate! says who got the donation"
+  (let [file (temp-file)]
+    (core/save-donors! file donors)
+    (str/split-lines (with-out-str (core/donate! file 2)))
+    => ["Upisana donacija za Jelena Nikolic - ukupno 4"]))
+
+(fact "donate! says when there is no donor"
+  (let [file (temp-file)]
+    (core/save-donors! file donors)
+    (str/split-lines (with-out-str (core/donate! file 99)))
+    => ["Ne postoji donor sa ID 99"]))
+
+(fact "donate! warns when the file has bad rows"
+  (let [file (temp-file)]
+    (spit file "1,Marko,Petrovic,A+,12\n5,Mila,Savic,a+,7")
+    (str/split-lines (with-out-str (core/donate! file 1)))
+    => ["Fajl ima neispravne redove, donacija nije upisana"]))
