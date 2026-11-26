@@ -116,13 +116,20 @@
   [reward-name donors]
   (filter #(= reward-name (-> % :donations reward-for :reward)) donors))
 
+(defn donor->line [donor]
+  (let [line (str/join " " [(:id donor)
+                            (:first-name donor)
+                            (:last-name donor)
+                            (:blood-type donor)
+                            (:donations donor)])
+        reward (reward-for (:donations donor))]
+    (if reward
+      (str line " " (:reward reward))
+      line)))
+
 (defn print-donors [donors]
   (doseq [donor donors]
-    (println (:id donor)
-             (:first-name donor)
-             (:last-name donor)
-             (:blood-type donor)
-             (:donations donor))))
+    (println (donor->line donor))))
 
 (defn print-donation [donor]
   (println "Upisana donacija za"

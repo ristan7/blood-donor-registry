@@ -223,14 +223,18 @@
   (provided
     (core/run core/donors-file ["donate" "2"]) => nil))
 
+(fact "donor->line shows the donor and the reward"
+  (core/donor->line marko) => "1 Marko Petrovic A+ 12 Zahvalnica"
+  (core/donor->line jelena) => "2 Jelena Nikolic 0- 3")
+
 (fact "run prints all donors"
   (let [file (temp-file)]
     (core/save-donors! file donors)
     (str/split-lines (with-out-str (core/run file [])))
-    => ["1 Marko Petrovic A+ 12"
+    => ["1 Marko Petrovic A+ 12 Zahvalnica"
         "2 Jelena Nikolic 0- 3"
-        "3 Stefan Jovanovic B+ 27"
-        "4 Ana Ilic AB+ 51"]))
+        "3 Stefan Jovanovic B+ 27 Srebrna značka"
+        "4 Ana Ilic AB+ 51 Zlatna značka"]))
 
 (fact "donate records a donation for the id"
   (core/run "donors.csv" ["donate" "2"]) => nil
