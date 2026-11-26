@@ -69,10 +69,7 @@
     (provided
       (slurp "donors.csv") => (str "1,Marko,Petrovic,A+,12\n"
                                    "2,Jelena,Nikolic,0-,3\n"
-                                   "1,Mila,Savic,0+,4")))
-
-  (fact "the sample file contains the four sample donors"
-    (core/load-donors core/donors-file) => donors))
+                                   "1,Mila,Savic,0+,4"))))
 
 (facts "about donor validation"
   (fact "a complete donor is valid"
@@ -221,17 +218,24 @@
     (core/donors-with-reward "Zahvalnica" donors) => [marko]
     (core/donors-with-reward "Povelja" donors) => empty?))
 
-(fact "main prints all donors"
-  (str/split-lines (with-out-str (core/-main)))
-  => ["1 Marko Petrovic A+ 12"
-      "2 Jelena Nikolic 0- 3"
-      "3 Stefan Jovanovic B+ 27"
-      "4 Ana Ilic AB+ 51"])
-
-(fact "donate records a donation for the id"
+(fact "main runs with the donors file"
   (core/-main "donate" "2") => nil
   (provided
-    (core/donate! core/donors-file 2) => nil))
+    (core/run core/donors-file ["donate" "2"]) => nil))
+
+(fact "run prints all donors"
+  (let [file (temp-file)]
+    (core/save-donors! file donors)
+    (str/split-lines (with-out-str (core/run file [])))
+    => ["1 Marko Petrovic A+ 12"
+        "2 Jelena Nikolic 0- 3"
+        "3 Stefan Jovanovic B+ 27"
+        "4 Ana Ilic AB+ 51"]))
+
+(fact "donate records a donation for the id"
+  (core/run "donors.csv" ["donate" "2"]) => nil
+  (provided
+    (core/donate! "donors.csv" 2) => nil))
 
 (fact "parse-id turns text into a number"
   (core/parse-id "2") => 2
@@ -239,9 +243,9 @@
   (core/parse-id nil) => nil)
 
 (fact "donate without a good id prints how to use it"
-  (str/split-lines (with-out-str (core/-main "donate")))
+  (str/split-lines (with-out-str (core/run "donors.csv" ["donate"])))
   => ["Upotreba: lein run donate <id>"]
-  (str/split-lines (with-out-str (core/-main "donate" "abc")))
+  (str/split-lines (with-out-str (core/run "donors.csv" ["donate" "abc"])))
   => ["Upotreba: lein run donate <id>"])
 
 (fact "donate! says who got the donation"

@@ -142,9 +142,12 @@
   (when s
     (parse-long s)))
 
-(defn -main [& args]
+(defn run [file args]
   (if (= "donate" (first args))
     (if-let [id (parse-id (second args))]
-      (donate! donors-file id)
+      (donate! file id)
       (println "Upotreba: lein run donate <id>"))
-    (print-donors (load-donors donors-file))))
+    (print-donors (load-donors file))))
+
+(defn -main [& args]
+  (run donors-file args))
